@@ -52,9 +52,11 @@ Returns statistics for the specified time window.
   "count": 720,
   "success": 715,
   "fail": 5,
-  "avgTTL": 56.1,
-  "avgTime": 12.5,
-  "packetLoss": 0.69
+  "avgTTL": 56.2,
+  "avgTime": 12.34,
+  "packetLoss": 0.694,
+  "uptime": 99.31,
+  "downtime": 0.69
 }
 ```
 
