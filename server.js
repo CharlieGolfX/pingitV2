@@ -160,21 +160,28 @@ const healthLimiter = rateLimit({
     message: { error: 'Too many requests, please try again later.' }
 });
 
+function uptimeStats(statsObj) {
+    const { count, success, fail } = statsObj;
+    const uptime = count ? ((success / count) * 100).toFixed(2) : "0.00";
+    const downtime = count ? ((fail / count) * 100).toFixed(2) : "0.00";
+    return { ...statsObj, uptime: Number(uptime), downtime: Number(downtime) };
+}
+
 // HTTP endpoints with general rate limiter
 app.get('/results/10m', generalLimiter, apiKeyMiddleware, (req, res) => {
-    res.json(stats.tenMinutes);
+    res.json(uptimeStats(stats.tenMinutes));
 });
 app.get('/results/hour', generalLimiter, apiKeyMiddleware, (req, res) => {
-    res.json(stats.hour);
+    res.json(uptimeStats(stats.hour));
 });
 app.get('/results/day', generalLimiter, apiKeyMiddleware, (req, res) => {
-    res.json(stats.day);
+    res.json(uptimeStats(stats.day));
 });
 app.get('/results/week', generalLimiter, apiKeyMiddleware, (req, res) => {
-    res.json(stats.week);
+    res.json(uptimeStats(stats.week));
 });
 app.get('/results/month', generalLimiter, apiKeyMiddleware, (req, res) => {
-    res.json(stats.month);
+    res.json(uptimeStats(stats.month));
 });
 app.get('/results/history', generalLimiter, apiKeyMiddleware, (req, res) => {
     res.json(stats.history);
