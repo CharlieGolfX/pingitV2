@@ -4,6 +4,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
+const speedTest = require('speedtest-net');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,8 @@ const HISTORY_DIR = path.join(__dirname, 'history');
 const STATS_FILE = path.join(RESULTS_DIR, 'ping_stats.json');
 const HISTORY_FILE = path.join(HISTORY_DIR, 'history.json');
 const FAILED_FILE = path.join(HISTORY_DIR, 'failed.json');
+const SPEEDTEST_FILE = path.join(RESULTS_DIR, 'speedtest.json');
+let latestSpeedtest = null;
 
 // Verify directories exist
 [RESULTS_DIR, HISTORY_DIR].forEach(dir => {
@@ -43,6 +46,11 @@ if (fs.existsSync(STATS_FILE)) {
 } else if (fs.existsSync(HISTORY_FILE)) {
     // If only history exists, load it
     stats.history = JSON.parse(fs.readFileSync(HISTORY_FILE));
+}
+
+// Load latest speedtest result if exists
+if (fs.existsSync(SPEEDTEST_FILE)) {
+    latestSpeedtest = JSON.parse(fs.readFileSync(SPEEDTEST_FILE));
 }
 
 function pruneHistory() {
@@ -167,6 +175,30 @@ function uptimeStats(statsObj) {
     return { ...statsObj, uptime: Number(uptime), downtime: Number(downtime) };
 }
 
+// Run speedtest and save result
+async function runSpeedtest() {
+    try {
+        const result = await speedTest({ acceptLicense: true, acceptGdpr: true });
+        latestSpeedtest = {
+            ping: result.ping.latency,
+            download: result.download.bandwidth * 8 / 1e6, // Mbps
+            upload: result.upload.bandwidth * 8 / 1e6,     // Mbps
+            isp: result.isp,
+            server: result.server.name,
+            timestamp: result.timestamp
+        };
+        fs.writeFileSync(SPEEDTEST_FILE, JSON.stringify(latestSpeedtest, null, 2));
+        //console.log('Speedtest completed and saved.');
+    } catch (err) {
+        console.error('Speedtest failed:', err.message);
+    }
+}
+
+// Run speedtest every 10 minutes (600,000 ms)
+setInterval(runSpeedtest, 10 * 60 * 1000);
+// Optionally run once at startup
+runSpeedtest();
+
 // HTTP endpoints with general rate limiter
 app.get('/results/10m', generalLimiter, apiKeyMiddleware, (req, res) => {
     res.json(uptimeStats(stats.tenMinutes));
@@ -191,6 +223,15 @@ app.get('/results/failed', generalLimiter, apiKeyMiddleware, (req, res) => {
     res.json(failed);
 });
 
+// Speedtest endpoint (protected by API key and general rate limiter)
+app.get('/speedtest', generalLimiter, apiKeyMiddleware, (req, res) => {
+    if (latestSpeedtest) {
+        res.json(latestSpeedtest);
+    } else {
+        res.status(503).json({ error: 'No speedtest result available yet.' });
+    }
+});
+
 // Health endpoint with its own limiter
 app.get('/health', healthLimiter, (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString() });
@@ -199,3 +240,4 @@ app.get('/health', healthLimiter, (req, res) => {
 app.listen(PORT, () => {
     console.log(`pingitV2 server listening on port ${PORT}`);
 });
+
