@@ -6,7 +6,8 @@ A simple Node.js server that monitors network connectivity by periodically pingi
 
 - Periodically pings a configurable target (IP, hostname, or URL)
 - Stores ping history and statistics (10 minutes, hour, day, week, month)
-- REST API for retrieving stats, full history, and failed pings
+- Automatically runs a speedtest every 10 minutes
+- REST API for retrieving stats, full history, failed pings, and speedtest results
 - API key authentication
 - Configurable rate limiting
 - Health check endpoint
@@ -52,7 +53,7 @@ Edit the `.env` file to set:
 node server.js
 ```
 
-The server will start pinging the target and listening for API requests.
+The server will start pinging the target, running speedtests, and listening for API requests.
 
 ## API Documentation
 
@@ -63,6 +64,7 @@ See [docs/api.md](docs/api.md) for full details.
 - Ping stats: [`results/ping_stats.json`](results/ping_stats.json)
 - Full history: [`history/history.json`](history/history.json)
 - Failed pings: [`history/failed.json`](history/failed.json)
+- **Latest speedtest result: [`results/speedtest.json`](results/speedtest.json)**
 
 ## License
 
