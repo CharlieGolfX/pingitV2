@@ -77,13 +77,6 @@ Returns the full ping history for the last 31 days.
     "success": true,
     "ttl": 56,
     "time": 41.64
-  },
-  {
-    "timestamp": 1749591240051,
-    "datetime": "2025-06-10 23:34:00",
-    "success": true,
-    "ttl": 56,
-    "time": 46.18
   }
   // ...
 ]
@@ -130,6 +123,33 @@ Returns API health status.
 
 ---
 
+### 5. Get Latest Speedtest Result
+
+**GET** `/speedtest`
+
+Returns the most recent speedtest result (automatically run every 10 minutes and stored in `/results/speedtest.json`).
+
+**Response:**
+```json
+{
+  "ping": 12.34,
+  "download": 94.56,
+  "upload": 18.23,
+  "isp": "Example ISP",
+  "server": "Speedtest Server Name",
+  "timestamp": "2025-06-10T23:40:00.123Z"
+}
+```
+
+If no result is available yet:
+```json
+{
+  "error": "No speedtest result available yet."
+}
+```
+
+---
+
 ## Error Responses
 
 - `401 Unauthorized` – Missing or invalid API key.
@@ -141,5 +161,6 @@ Returns API health status.
 
 - Only the last 31 days of history are retained.
 - The target host, ping interval, and API key are configured via environment variables.
+- Speedtests are run automatically every 10 minutes
 
 ---
